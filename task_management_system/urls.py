@@ -15,8 +15,23 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', include('tms.urls')),
+    # path('api-auth/', include('rest_framework.urls')),
+    # Uncomment the above line to enable the browsable API authentication
+    # path('api-auth/', include('rest_framework.authtoken.urls')),
+    # Uncomment the above line to enable token authentication
+    # path('api-auth/', include('rest_framework_jwt.urls')),
+    # Uncomment the above line to enable JWT authentication
+    # path('api-auth/', include('rest_framework_simplejwt.urls')),
+    # Uncomment the above line to enable Simple JWT authentication
+    # path('api-auth/', include('rest_framework_social_oauth2.urls')),
+    # Uncomment the above line to enable social authentication
+    # path('api-auth/', include('rest_framework_social_auth.urls')),
+    # Uncomment the above line to enable social authentication
+    # path('api-auth/', include('rest_framework_oauth.urls')),
+    # Uncomment the above line to enable OAuth authentication
 ]

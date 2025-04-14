@@ -12,7 +12,7 @@ class ProjectModel(models.Model):
                                     default=1)  # Assuming the user with ID 1 exists as the default user
 
     def __str__(self): 
-        return self.title
+        return f"{self.title} crated by {self.created_by.username}"
 
 
 

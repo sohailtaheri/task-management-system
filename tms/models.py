@@ -6,6 +6,7 @@ class ProjectModel(models.Model):
     title       = models.CharField(max_length=255, blank=False, unique=True)
     description = models.TextField(blank=True, null=True)
     created     = models.DateTimeField(auto_now_add=True)
+    modified    = models.DateTimeField(auto_now=True)
     created_by  = models.ForeignKey('auth.User', 
                                     on_delete=models.CASCADE, 
                                     related_name='projects', 

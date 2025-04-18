@@ -34,7 +34,7 @@ class TaskModel(models.Model):
     description = models.TextField(blank=True, null=True)
     created     = models.DateTimeField(auto_now_add=True)
     modified    = models.DateTimeField(auto_now=True)
-    project     = models.ForeignKey(ProjectModel, on_delete=models.CASCADE)
+    project     = models.ForeignKey(ProjectModel, related_name='tasks', on_delete=models.CASCADE)
     status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     priority    = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
     due_date    = models.DateField(blank=True, null=True)

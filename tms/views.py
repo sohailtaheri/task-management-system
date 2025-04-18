@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from tms.models import ProjectModel, TaskModel
 from tms.serializers import ProjectSerializer, TaskSerializer
@@ -8,6 +9,7 @@ from django.contrib.auth.models import User
 
 # Create your views here.
 @csrf_exempt
+@api_view(['GET', 'POST'])
 def project_list(request):
     """
     List all projects, or create a new project.
@@ -26,6 +28,7 @@ def project_list(request):
         return JsonResponse(serializer.errors, status=400)
 
 @csrf_exempt
+@api_view(['GET', 'PUT', 'DELETE'])
 def project_detail(request, pk):
     """
     Retrieve, update or delete a project.
@@ -52,6 +55,7 @@ def project_detail(request, pk):
         return HttpResponse(status=204)
 
 @csrf_exempt
+@api_view(['GET', 'POST'])
 def task_list(request):
     """
     List all tasks, or create a new task.
@@ -72,6 +76,7 @@ def task_list(request):
     return JsonResponse({'message': 'Method not allowed'}, status=405)
 
 @csrf_exempt
+@api_view(['GET', 'PUT', 'DELETE'])
 def task_detail(request, pk):
     """
     Retrieve, update or delete a task.

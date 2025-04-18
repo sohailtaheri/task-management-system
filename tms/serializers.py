@@ -32,7 +32,7 @@ class TaskSerializer(serializers.ModelSerializer):
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    tasks = TaskSerializer(many=True, required=False, read_only=True)
+    tasks = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = ProjectModel
@@ -53,6 +53,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             return project
 
         def update(self, instance, validated_data):
+
             tasks_data = validated_data.pop('tasks', None)
             instance.title = validated_data.get('title', instance.title)
             instance.description = validated_data.get('description', instance.description)

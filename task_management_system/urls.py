@@ -16,22 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('', include('tms.urls')),
-    # path('api-auth/', include('rest_framework.urls')),
-    # Uncomment the above line to enable the browsable API authentication
-    # path('api-auth/', include('rest_framework.authtoken.urls')),
-    # Uncomment the above line to enable token authentication
-    # path('api-auth/', include('rest_framework_jwt.urls')),
-    # Uncomment the above line to enable JWT authentication
-    # path('api-auth/', include('rest_framework_simplejwt.urls')),
-    # Uncomment the above line to enable Simple JWT authentication
-    # path('api-auth/', include('rest_framework_social_oauth2.urls')),
-    # Uncomment the above line to enable social authentication
-    # path('api-auth/', include('rest_framework_social_auth.urls')),
-    # Uncomment the above line to enable social authentication
-    # path('api-auth/', include('rest_framework_oauth.urls')),
-    # Uncomment the above line to enable OAuth authentication
 ]

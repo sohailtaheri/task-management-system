@@ -2,16 +2,23 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.models import User
 from rest_framework.parsers import JSONParser
 from rest_framework.views import APIView
-from rest_framework import generics
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework import generics, permissions
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from tms.models import ProjectModel, TaskModel
 from tms.serializers import ProjectSerializer, TaskSerializer, UserSerializer
+
+
 
 class BaseListView(APIView):
     """
     Abstract base class for listing and creating objects.
     """
-    model = None
-    serializer_class = None
+    model                  = None
+    serializer_class       = None
+    authentication_classes = [JWTAuthentication]
+    permission_classes     = [permissions.IsAuthenticated]
 
     def get(self, request):
         objects = self.model.objects.all()
@@ -34,12 +41,18 @@ class ProjectList(BaseListView):
     model            = ProjectModel
     serializer_class = ProjectSerializer
 
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
 class TaskList(BaseListView):
     """
     List all tasks, or create a new task.
     """
     model            = TaskModel
     serializer_class = TaskSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
 
 class BaseDetailView(APIView):
     """
@@ -103,3 +116,24 @@ class UserDetail(generics.RetrieveAPIView):
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+class RegisterView(APIView):
+    """
+    Register a new user.
+    """
+    authentication_classes = [JWTAuthentication]
+    permission_classes     = [permissions.AllowAny]
+    def post(self, request):
+        data     = JSONParser().parse(request)
+        username = data.get('username', None)
+        password = data.get('password', None)
+        email    = data.get('email', None)
+
+        if not username or not password:
+            return Response({"error": "Username and password are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(username=username).exists():
+            return Response({"error": "Username already exists."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.create_user(username=username, password=password, email=email)
+        return Response({"message": "Account created successfully!"}, status=status.HTTP_201_CREATED)

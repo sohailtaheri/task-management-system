@@ -8,14 +8,14 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = [
             'id', 
             'title', 
-            'description', 
             'created', 
             'modified', 
             'project', 
             'status', 
             'priority', 
             'due_date', 
-            'created_by'
+            'created_by',
+            'assigned_to'
         ]
 
         read_only_fields = ['created', 'modified', 'created_by']
@@ -33,6 +33,23 @@ class ProjectSerializer(serializers.ModelSerializer):
             'description', 
             'created',
             'modified',
-            'created_by',
+            'owner',
             'tasks',
+        ]
+
+class UserSerializer(serializers.ModelSerializer):
+    projects       = serializers.StringRelatedField(many=True, read_only=True)
+
+    created_tasks  = TaskSerializer(many=True, read_only=True)
+    assigned_tasks = TaskSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 
+            'username', 
+            'email', 
+            'projects',
+            'created_tasks',
+            'assigned_tasks',
         ]

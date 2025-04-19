@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class ProjectModel(models.Model):
@@ -7,13 +8,12 @@ class ProjectModel(models.Model):
     description = models.TextField(blank=True, null=True)
     created     = models.DateTimeField(auto_now_add=True)
     modified    = models.DateTimeField(auto_now=True)
-    created_by  = models.ForeignKey('auth.User', 
+    owner       = models.ForeignKey('auth.User', 
                                     on_delete=models.CASCADE, 
                                     related_name='projects', 
                                     default=1)  # Assuming the user with ID 1 exists as the default user
-
     def __str__(self): 
-        return f"{self.title} crated by {self.created_by.username}"
+        return f"{self.title} crated by {self.owner.username}"
 
 
 
@@ -32,7 +32,7 @@ class TaskModel(models.Model):
     ]
 
     title       = models.CharField(max_length=255, blank=False, unique=True)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True, max_length=1024)
     created     = models.DateTimeField(auto_now_add=True)
     modified    = models.DateTimeField(auto_now=True)
     project     = models.ForeignKey(ProjectModel, related_name='tasks', on_delete=models.CASCADE)
@@ -40,10 +40,16 @@ class TaskModel(models.Model):
     priority    = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
     due_date    = models.DateField(blank=True, null=True)
     created_by  = models.ForeignKey(
-        'auth.User', 
+        User, 
         on_delete=models.CASCADE, 
-        related_name='tasks', 
-        default=1  # Assuming the user with ID 1 exists as the default user
+        related_name='created_tasks',
+    )
+    assigned_to = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='assigned_tasks',
+        blank=True,
+        null=True,
     )
 
     def __str__(self):

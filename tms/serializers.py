@@ -3,6 +3,8 @@ from .models import TaskModel, ProjectModel
 from django.contrib.auth.models import User
 
 class TaskSerializer(serializers.ModelSerializer):
+    created_by = serializers.StringRelatedField(read_only=True)
+
     class Meta:
         model = TaskModel
         fields = [
@@ -22,9 +24,9 @@ class TaskSerializer(serializers.ModelSerializer):
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-
+    
     tasks = serializers.StringRelatedField(many=True, read_only=True)
-    owner = serializers.ReadOnlyField(source='owner.username')
+    owner = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = ProjectModel
@@ -37,6 +39,8 @@ class ProjectSerializer(serializers.ModelSerializer):
             'owner',
             'tasks',
         ]
+    
+    
 
 class UserSerializer(serializers.ModelSerializer):
     projects       = serializers.StringRelatedField(many=True, read_only=True)
@@ -53,4 +57,14 @@ class UserSerializer(serializers.ModelSerializer):
             'projects',
             'created_tasks',
             'assigned_tasks',
+        ]
+
+class UserSerializerPublic(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 
+            'username', 
+            'email',
         ]

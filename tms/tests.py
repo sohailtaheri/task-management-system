@@ -3,50 +3,34 @@ from django.utils.timezone import now, timedelta
 import random
 import unittest
 from tms.models import ProjectModel, TaskModel
+from django.contrib.auth.models import User
+from tms.serializers import ProjectSerializer, TaskSerializer
+from rest_framework.parsers import JSONParser
+from django.http import JsonResponse
+import subprocess
 
-class ProjectAndTaskTestCase(TestCase):
+class TestUsers(TestCase):
+    
     def setUp(self):
-        # Create ProjectModel instances
-        self.project1 = ProjectModel.objects.create(title="Project Alpha", description="Description for Project Alpha")
-        self.project2 = ProjectModel.objects.create(title="Project Beta", description="Description for Project Beta")
-        self.project3 = ProjectModel.objects.create(title="Project Gamma", description="Description for Project Gamma")
+        # Create a user for testing
+        self.user = User.objects.all()
 
-        # Create TaskModel instances and assign them randomly to projects
-        self.projects = [self.project1, self.project2, self.project3]
-        self.tasks = []
-        for i in range(7):
-            task = TaskModel.objects.create(
-                title=f"Task {i+1}",
-                description=f"Description for Task {i+1}",
-                project=random.choice(self.projects),
-                priority=random.choice(['low', 'medium', 'high']),
-                due_date=now().date() + timedelta(days=random.randint(1, 30))
-            )
-            self.tasks.append(task)
+        self.assertGreaterThan(len(self.user), 0, "No users found in the database.")
+        self.assertTrue(self.user[0].is_superuser, "The first user is not a superuser.")
 
-    def test_project_creation(self):
-        self.assertEqual(ProjectModel.objects.count(), 3)
-        self.assertTrue(ProjectModel.objects.filter(title="Project Alpha").exists())
-        self.assertTrue(ProjectModel.objects.filter(title="Project Beta").exists())
-        self.assertTrue(ProjectModel.objects.filter(title="Project Gamma").exists())
+    def test_user_creation(self):
+        for user in self.user:
+            if not user.is_superuser:
+                assertTrue(user.is_superuser, f"User {user.username} is not a superuser.")
+                # check token file path
+                filePath = f"~/workspace/log/tokens/{user.username}.json"
+                assertTrue(os.path.exists(filePath), f"Token file for {user.username} does not exist.")
 
-    def test_task_creation(self):
-        self.assertEqual(TaskModel.objects.count(), 7)
-        for i in range(7):
-            self.assertTrue(TaskModel.objects.filter(title=f"Task {i+1}").exists())
-
-    def test_task_project_assignment(self):
-        for task in self.tasks:
-            self.assertIn(task.project, self.projects)
-
-    def test_task_priority(self):
-        valid_priorities = ['low', 'medium', 'high']
-        for task in self.tasks:
-            self.assertIn(task.priority, valid_priorities)
-
-    def test_task_due_date(self):
-        for task in self.tasks:
-            self.assertGreaterEqual(task.due_date, now().date())
+                data = JSONParser().parse(filePath)
+                self.assertIn('refresh', data, f"Refresh token not found for {user.username}.")
+                self.assertIn('access', data, f"Access token not found for {user.username}.")
+                savedToken = data['token']
+                self.assertEqual(savedToken, user.token, f"Token mismatch for {user.username}.")
 
 if __name__ == "__main__":
     unittest.main()

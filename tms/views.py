@@ -7,7 +7,9 @@ from rest_framework import status
 from rest_framework import generics, permissions
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from tms.models import ProjectModel, TaskModel
-from tms.serializers import ProjectSerializer, TaskSerializer, UserSerializer
+from tms.serializers import ProjectSerializer, TaskSerializer, UserSerializer, UserSerializerPublic
+
+
 
 
 
@@ -19,9 +21,11 @@ class BaseListView(APIView):
     serializer_class       = None
     authentication_classes = [JWTAuthentication]
     permission_classes     = [permissions.IsAuthenticated]
+    owner_field            = ''
 
     def get(self, request):
-        objects = self.model.objects.all()
+        filter_params = {self.owner_field: request.user}
+        objects = self.model.objects.filter(**filter_params)
         serializer = self.serializer_class(objects, many=True)
         return JsonResponse(serializer.data, safe=False)
 
@@ -29,7 +33,8 @@ class BaseListView(APIView):
         data = JSONParser().parse(request)
         serializer = self.serializer_class(data=data)
         if serializer.is_valid():
-            serializer.save()
+            context = {self.owner_field: request.user}
+            serializer.save(**context)
             return JsonResponse(serializer.data, status=201)
         return JsonResponse(serializer.errors, status=400)
 
@@ -40,9 +45,7 @@ class ProjectList(BaseListView):
     """
     model            = ProjectModel
     serializer_class = ProjectSerializer
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+    owner_field      = 'owner'
 
 class TaskList(BaseListView):
     """
@@ -50,30 +53,35 @@ class TaskList(BaseListView):
     """
     model            = TaskModel
     serializer_class = TaskSerializer
+    owner_field      = 'created_by'
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
 
 class BaseDetailView(APIView):
     """
     Abstract base class for retrieving, updating or deleting objects.
     """
-    model = None
-    serializer_class = None
+    model                  = None
+    serializer_class       = None
+    authentication_classes = [JWTAuthentication]
+    permission_classes     = [permissions.IsAuthenticated]
+    owner_field            = ''
 
-    def get_object(self, pk):
+    def get_object(self, pk, request):
         try:
-            return self.model.objects.get(pk=pk)
+            filter_params = {self.owner_field: request.user, 'pk': pk}
+            return self.model.objects.get(**filter_params)
         except self.model.DoesNotExist:
             return None
+
     def get(self, request, pk):
-        obj = self.get_object(pk)
+        obj = self.get_object(pk, request)
         if obj is None:
             return HttpResponse(status=404)
         serializer = self.serializer_class(obj)
         return JsonResponse(serializer.data)
+
     def put(self, request, pk):
-        obj = self.get_object(pk)
+        obj = self.get_object(pk, request)
         if obj is None:
             return HttpResponse(status=404)
         data = JSONParser().parse(request)
@@ -82,8 +90,9 @@ class BaseDetailView(APIView):
             serializer.save()
             return JsonResponse(serializer.data)
         return JsonResponse(serializer.errors, status=400)
+
     def delete(self, request, pk):
-        obj = self.get_object(pk)
+        obj = self.get_object(pk, request)
         if obj is None:
             return HttpResponse(status=404)
         obj.delete()
@@ -95,6 +104,7 @@ class ProjectDetail(BaseDetailView):
     """
     model            = ProjectModel
     serializer_class = ProjectSerializer
+    owner_field      = 'owner'
 
 class TaskDetail(BaseDetailView):
     """
@@ -102,13 +112,16 @@ class TaskDetail(BaseDetailView):
     """
     model            = TaskModel
     serializer_class = TaskSerializer
+    owner_field      = 'created_by'
     
 class UserList(generics.ListAPIView):
     """
     List all users.
     """
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = UserSerializerPublic
+    authentication_classes = [JWTAuthentication]
+    permission_classes     = [permissions.AllowAny]
 
 class UserDetail(generics.RetrieveAPIView):  
     """
@@ -116,6 +129,8 @@ class UserDetail(generics.RetrieveAPIView):
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes     = [permissions.IsAuthenticated]
 
 class RegisterView(APIView):
     """

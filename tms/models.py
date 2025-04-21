@@ -8,7 +8,7 @@ class ProjectModel(models.Model):
     description = models.TextField(blank=True, null=True)
     created     = models.DateTimeField(auto_now_add=True)
     modified    = models.DateTimeField(auto_now=True)
-    owner       = models.ForeignKey('auth.User', 
+    owner       = models.ForeignKey(User, 
                                     on_delete=models.CASCADE, 
                                     related_name='projects', 
                                     default=1)  # Assuming the user with ID 1 exists as the default user
@@ -43,6 +43,7 @@ class TaskModel(models.Model):
         User, 
         on_delete=models.CASCADE, 
         related_name='created_tasks',
+        default=1,  # Assuming the user with ID 1 exists as the default user
     )
     assigned_to = models.ForeignKey(
         User, 
